@@ -15,6 +15,7 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.WritableByteChannel;
+import java.util.Iterator;
 
 /**
  *
@@ -29,7 +30,8 @@ public class ChatServer {
     private Selector selector;
     private ServerSocketChannel serverChannel;
     
-    void startServer() throws IOException{
+    //  Handles all sending and receiving over the net.
+    private void startServer() throws IOException{
         // Init selector    
         selector = Selector.open();
         
@@ -41,8 +43,41 @@ public class ChatServer {
         
         while(true){
             selector.select();
-            
+            Iterator<SelectionKey> iterator = selector.selectedKeys().iterator();
+            while(iterator.hasNext()){
+                SelectionKey key = iterator.next();
+                iterator.remove();
+                if(key.isAcceptable()){
+                    // Register channel and CLient object to selector 
+                    regChannel(key);
+                }
+                else if(key.isReadable()){
+                    // Read from channel and execute task with attached object
+                    readChannel(key);
+                }
+                else if(key.isWritable()){
+                    // Write to channel 
+                    writeChannel(key);
+                }
+            }
         }
+    }
+    
+    // registers the Channel to the selector and creates the objects associated with the client
+    private void regChannel(SelectionKey key) throws IOException{
+        ServerSocketChannel socketChannel = (ServerSocketChannel) key.channel();  //Behövs detta?
+        SocketChannel clientChannel = socketChannel.accept();
+        clientChannel.configureBlocking(false);
+        // TODO: Make object to be associated with the client (clientHandler)
+        clientChannel.register(selector, SelectionKey.OP_WRITE);    // We expect to write first time (A response like "start game")
+    }
+    
+    private void readChannel(SelectionKey key){
+        
+    }
+    
+    private void writeChannel(SelectionKey key){
+        
     }
     
     public static void main(String[] args) throws IOException {
