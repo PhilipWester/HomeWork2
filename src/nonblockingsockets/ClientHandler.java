@@ -23,6 +23,8 @@ class ClientHandler implements Runnable {
     private final SocketChannel clientChannel;
     private final Controller controller;
     private ByteBuffer buf = ByteBuffer.allocateDirect(8192);
+    private String request = "default";
+    private boolean inGame = false;
     
     public ClientHandler(SocketChannel clientChannel) {
         controller = new Controller();
@@ -31,55 +33,41 @@ class ClientHandler implements Runnable {
 
     @Override
     public void run() {
-        
-        try {
-            boolean connected = true;
-            boolean inGame = false;
-            String request;
-            sendResponse("To start a game, type: Start Game");
-            while(connected){
-                              
-                if(!inGame){
-                    request = readRequest();
-                    if(request.toLowerCase().equals("start game")){
+        try {                  
+            if(!inGame){
+                sendResponse("To start a game, type: Start Game");
+                switch (request){
+                    case "start game":
                         controller.changeWord();
                         sendResponse("Game started");
                         inGame = true;
-                        continue;
+                        break;
+                    case "exit":
+                        sendResponse("exit");
+                        disconnect();
+                        break;
+                    case "default":
+                        sendResponse("this shouldn't happen");
+                        break;
                 }
-                    else{
-                        if(request.toLowerCase().equals("exit")){
-                            sendResponse("exit");
-                            disconnect();
-                            connected = false;
-                        }else{
-                            sendResponse("To start a game, type: Start Game");
+            } else{
+                    if(request.toLowerCase().equals("exit")){
+                        sendResponse("exit");
+                        disconnect();
+                    }
+
+                    else if (request.toLowerCase().startsWith("guess ")){
+                        String response = controller.guess(request.toUpperCase());
+                        if (response.contains("win") || response.contains("lose")){ //Everything is uppercase -> no risc of accidentally getting any other "win" or "lose"
+                            inGame = false;
+                            sendResponse(response + " To start a game, type: Start Game");
                         }
-                        
-                        continue;
+                        else{
+                            sendResponse(response);
+                        }
+                    }else{
+                        sendResponse("To guess, type: guess [word].");
                     }
-                }
-                
-                request = readRequest();
-                if(request.toLowerCase().equals("exit")){
-                    sendResponse("exit");
-                    disconnect();
-                    connected = false;
-                }
-                
-                else if (request.toLowerCase().startsWith("guess ")){
-                    String response = controller.guess(request.toUpperCase());
-                    if (response.contains("win") || response.contains("lose")){ //Everything is uppercase -> no risc of accidentally getting any other "win" or "lose"
-                        inGame = false;
-                        sendResponse(response + " To start a game, type: Start Game");
-                        continue;
-                    }
-                    else{
-                        sendResponse(response);
-                    }
-                }else{
-                    sendResponse("To guess, type: guess [word].");
-                }
             }
             
         } catch (IOException ex) {
@@ -89,19 +77,21 @@ class ClientHandler implements Runnable {
     
     
     //  Reads input from client
-    private String readRequest() throws IOException{
+    void readRequest() throws IOException{
         // Load the buffer from the channel
         buf.clear();
         clientChannel.read(buf);
         buf.flip();
-        // Put the content of the buffer in a string
+        // Puts the content of the buffer in a string
         byte [] msg = new byte[buf.remaining()];
         buf.get(msg);
-        String string = Arrays.toString(msg);
-        return string;
+        request = Arrays.toString(msg).toLowerCase();
+        // TODO make a Thread from a pool run clientHandler 
+        
     }
     // Sends feedback to client
-    private void sendResponse(String response) throws IOException{
+    void sendResponse(String response) throws IOException{
+        // TODO Gör så att den här säger åt Selector-tråden att gör detta åt clientHandlern (clientHandlern ska ju inte sköta kommunikationen) 
         buf.clear();
         buf = ByteBuffer.wrap(response.getBytes());
         this.clientChannel.write(buf);
