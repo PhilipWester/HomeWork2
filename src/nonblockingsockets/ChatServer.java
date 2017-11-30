@@ -12,6 +12,8 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  *
@@ -24,10 +26,11 @@ public class ChatServer {
      */
     private ClientHandler cliHandler;
     private final int PORT = 8080;
+    private final int NumberOfThreads = 10;
     private Selector selector;
     private ServerSocketChannel serverChannel;
-    private boolean ifSend = false;
-    
+    // private boolean ifSend = false;
+    public ExecutorService threadPool = Executors.newFixedThreadPool(NumberOfThreads);
     void sendMsg(String msg){
         // Kanske få selectorn in på ett spår där den skickar iväg svar... men hur vet den vilken klient de olika svaren ska till? :/
     }
@@ -71,7 +74,7 @@ public class ChatServer {
         SocketChannel clientChannel = socketChannel.accept();
         clientChannel.configureBlocking(false);
         // Make object to be associated with the client (clientHandler)
-        ClientHandler cliHand = new ClientHandler(clientChannel);
+        ClientHandler cliHand = new ClientHandler(clientChannel, this);
         clientChannel.register(selector, SelectionKey.OP_WRITE, cliHand);    // We expect to write first time (A response like "start game")
     }
     

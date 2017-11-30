@@ -25,10 +25,12 @@ class ClientHandler implements Runnable {
     private ByteBuffer buf = ByteBuffer.allocateDirect(8192);
     private String request = "default";
     private boolean inGame = false;
+    private final ChatServer server;
     
-    public ClientHandler(SocketChannel clientChannel) {
+    public ClientHandler(SocketChannel clientChannel, ChatServer server) {
         controller = new Controller();
         this.clientChannel = clientChannel;        
+        this.server = server;
     }
 
     @Override
@@ -86,7 +88,8 @@ class ClientHandler implements Runnable {
         byte [] msg = new byte[buf.remaining()];
         buf.get(msg);
         request = Arrays.toString(msg).toLowerCase();
-        // TODO make a Thread from a pool run clientHandler 
+        // Takes a thread out of the pool and lets it run clientHandler
+        server.threadPool.execute(this);
         
     }
     // Sends feedback to client
