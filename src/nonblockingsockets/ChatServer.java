@@ -6,15 +6,11 @@
 package nonblockingsockets;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
-import java.nio.channels.Channels;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
-import java.nio.channels.WritableByteChannel;
 import java.util.Iterator;
 
 /**
@@ -27,7 +23,7 @@ public class ChatServer {
      * @param args the command line arguments
      */
     private ClientHandler cliHandler;
-    private int PORT = 8080;
+    private final int PORT = 8080;
     private Selector selector;
     private ServerSocketChannel serverChannel;
     private boolean ifSend = false;
