@@ -29,10 +29,13 @@ public class ChatServer {
     private final int NumberOfThreads = 10;
     private Selector selector;
     private ServerSocketChannel serverChannel;
-    // private boolean ifSend = false;
     public ExecutorService threadPool = Executors.newFixedThreadPool(NumberOfThreads);
-    void sendMsg(String msg){
-        // Kanske få selectorn in på ett spår där den skickar iväg svar... men hur vet den vilken klient de olika svaren ska till? :/
+    
+    //  Is this ok? The cliHandler will activate the OP_WRITE even though maybe that is the main threads task
+    //  If not: Make a list with the keys that need to write with clihandler and let main thread go through them and make them OP_WRITE itself
+    void activateSend(SelectionKey key){
+        key.interestOps(SelectionKey.OP_WRITE);
+        selector.wakeup();
     }
     
     //  Handles all sending and receiving over the net.
@@ -70,11 +73,10 @@ public class ChatServer {
     
     // registers the Channel to the selector and creates the objects associated with the client
     private void regChannel(SelectionKey key) throws IOException{
-        ServerSocketChannel socketChannel = (ServerSocketChannel) key.channel();  //Behövs detta?
-        SocketChannel clientChannel = socketChannel.accept();
+        SocketChannel clientChannel = serverChannel.accept();
         clientChannel.configureBlocking(false);
         // Make object to be associated with the client (clientHandler)
-        ClientHandler cliHand = new ClientHandler(clientChannel, this);
+        ClientHandler cliHand = new ClientHandler(clientChannel, this, key);
         clientChannel.register(selector, SelectionKey.OP_WRITE, cliHand);    // We expect to write first time (A response like "start game")
     }
     
@@ -85,7 +87,7 @@ public class ChatServer {
     
     private void writeChannel(SelectionKey key) throws IOException{
         cliHandler = (ClientHandler) key.attachment();
-        cliHandler.sendResponse("Vet inte riktigt än");
+        cliHandler.sendResponse();
     }
     
     public static void main(String[] args) throws IOException {
@@ -104,6 +106,35 @@ public class ChatServer {
         
         Client:
             ???
+    */
+    
+    /*
+        Frågor och svar (inte hans bokstavliga svar):
+            
+            Varför behöver du köra "selector.wakeup()"? 
+            För att sätta om selectorn till Write
+
+            Varför gör du:
+            ServerSocketChannel serverSocketChannel = (ServerSocketChannel) key.channel();
+            I "startHandler"? Är den inte redan initierad som "listeningSocketChannel"? 
+            Det var onödigt, man behöver inte
+
+            Varför måste man göra key.interestOps(SelectionKey.OP_READ/WRITE)?
+            För att man måste säga vilken operation kanalen kommer ha nästa gång. (TIPS: Sätt till read efter varje write då du inte vet när klienten kommer skicka men du kan alltid göra "wakeup" när du själv ska skriva.  
+
+            Var finns den tredje noden "Registry" för RMI? Om den varken finns hos caller eller callee, var då? Varför inte bara ha den hos callee?
+            Alla noder finns på serversidan
+
+            Var på kurshemsidan kan jag se vilka MySQL tutorials du rekommenderar? (Du nämnde det i videon men har inte hittat)
+            Han hade glömt
+
+            Kanske: Kan man få clientHandlern att lägg in i kön hos selectorn
+
+            För att skicka tillbaka:
+            1. clientHandlern lägger meddelandet den vill skicka i en publik variabel.
+            2. Låt clientHandlern lägg in sig i en kö(typ array) hos selectortråden och göt wakeup.
+            3. Selectortråden läser i kö:n och gör varje korresponderande key till writeable. 
+            4. Selectortråden går till "select()" som hanterar alla writes som ville göras.
     */
     }
 }

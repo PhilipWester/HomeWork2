@@ -7,6 +7,7 @@ package nonblockingsockets;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.util.Arrays;
 import java.util.logging.Level;
@@ -26,35 +27,39 @@ class ClientHandler implements Runnable {
     private String request = "default";
     private boolean inGame = false;
     private final ChatServer server;
+    private SelectionKey key;
+    private String response;
     
-    public ClientHandler(SocketChannel clientChannel, ChatServer server) {
+    
+    public ClientHandler(SocketChannel clientChannel, ChatServer server, SelectionKey key) {
         controller = new Controller();
         this.clientChannel = clientChannel;        
         this.server = server;
+        this.key = key;
     }
 
     @Override
     public void run() {
         try {                  
             if(!inGame){
-                sendResponse("To start a game, type: Start Game");
+                requestResponse("To start a game, type: Start Game");
                 switch (request){
                     case "start game":
                         controller.changeWord();
-                        sendResponse("Game started");
+                        requestResponse("Game started");
                         inGame = true;
                         break;
                     case "exit":
-                        sendResponse("exit");
+                        requestResponse("exit");
                         disconnect();
                         break;
                     case "default":
-                        sendResponse("this shouldn't happen");
+                        requestResponse("this shouldn't happen");
                         break;
                 }
             } else{
                     if(request.toLowerCase().equals("exit")){
-                        sendResponse("exit");
+                        requestResponse("exit");
                         disconnect();
                     }
 
@@ -62,13 +67,13 @@ class ClientHandler implements Runnable {
                         String response = controller.guess(request.toUpperCase());
                         if (response.contains("win") || response.contains("lose")){ //Everything is uppercase -> no risc of accidentally getting any other "win" or "lose"
                             inGame = false;
-                            sendResponse(response + " To start a game, type: Start Game");
+                            requestResponse(response + " To start a game, type: Start Game");
                         }
                         else{
-                            sendResponse(response);
+                            requestResponse(response);
                         }
                     }else{
-                        sendResponse("To guess, type: guess [word].");
+                        requestResponse("To guess, type: guess [word].");
                     }
             }
             
@@ -92,9 +97,15 @@ class ClientHandler implements Runnable {
         server.threadPool.execute(this);
         
     }
+    //  Problem: Might overwrite the response if the main thread is too slow
+    void requestResponse(String message){
+        this.response = message;
+        //  Go to ChatServer and activate key
+        server.activateSend(key);
+    }
     // Sends feedback to client
-    void sendResponse(String response) throws IOException{
-        // TODO Gör så att den här säger åt Selector-tråden att gör detta åt clientHandlern (clientHandlern ska ju inte sköta kommunikationen) 
+    void sendResponse() throws IOException{
+        // The response, run by the main thread (ChatServer) 
         buf.clear();
         buf = ByteBuffer.wrap(response.getBytes());
         this.clientChannel.write(buf);
