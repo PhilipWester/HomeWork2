@@ -37,7 +37,7 @@ public class ClientOutput implements Runnable{
         // Puts the content of the buffer in a string
         byte [] msg = new byte[buf.remaining()];
         buf.get(msg);
-        messageFromServer = Arrays.toString(msg);
+        messageFromServer = new String(msg);
         cliSelector.threadPool.execute(this);
     }
 }
