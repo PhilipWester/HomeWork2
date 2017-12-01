@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package nonblockingsockets;
+package Server;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -26,7 +26,7 @@ public class ChatServer {
      */
     private ClientHandler cliHandler;
     private final int PORT = 8080;
-    private final int NumberOfThreads = 10;
+    private final int NumberOfThreads = 5;
     private Selector selector;
     private ServerSocketChannel serverChannel;
     public ExecutorService threadPool = Executors.newFixedThreadPool(NumberOfThreads);
@@ -56,7 +56,7 @@ public class ChatServer {
                 SelectionKey key = iterator.next();
                 iterator.remove();
                 if(key.isAcceptable()){
-                    // Register channel and CLient object to selector 
+                    // Register channel and ClientHandler object to selector 
                     regChannel(key);
                 }
                 else if(key.isReadable()){
