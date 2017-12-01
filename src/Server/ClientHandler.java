@@ -28,7 +28,7 @@ class ClientHandler implements Runnable {
     private boolean inGame = false;
     private final ChatServer server;
     private SelectionKey key;
-    private String response;
+    private String response = "To start a game, type: Start Game";
     
     
     public ClientHandler(SocketChannel clientChannel, ChatServer server, SelectionKey key) {

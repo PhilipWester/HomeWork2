@@ -66,6 +66,7 @@ public class ChatServer {
                 else if(key.isWritable()){
                     // Write (back) to channel 
                     writeChannel(key);
+                    key.interestOps(SelectionKey.OP_READ);
                 }
             }
         }

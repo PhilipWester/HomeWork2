@@ -14,11 +14,11 @@ import java.util.Arrays;
  *
  * @author philip
  */
-public class ClientOutput {
+public class ClientOutput implements Runnable{
     private final ClientSelector cliSelector;
     private String messageFromServer;
-    private ByteBuffer buf = ByteBuffer.allocateDirect(8192);
-    private SocketChannel socketChannel;
+    private final ByteBuffer buf = ByteBuffer.allocateDirect(8192);
+    private final SocketChannel socketChannel;
 
     public ClientOutput(ClientSelector cliSelector, SocketChannel socketChannel){
         this.cliSelector = cliSelector;
@@ -26,6 +26,7 @@ public class ClientOutput {
     }
     
     
+    @Override
     public void run(){
         System.out.println(messageFromServer);
     }
@@ -37,6 +38,6 @@ public class ClientOutput {
         byte [] msg = new byte[buf.remaining()];
         buf.get(msg);
         messageFromServer = Arrays.toString(msg);
-        cliSelector.threadPool.equals(this);
+        cliSelector.threadPool.execute(this);
     }
 }

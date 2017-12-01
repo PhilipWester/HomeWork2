@@ -59,7 +59,8 @@ public class ClientSelector {
         }
     }
 
-    private void initOutThread(SelectionKey key) throws ClosedChannelException{
+    private void initOutThread(SelectionKey key) throws ClosedChannelException, IOException{
+        socketChannel.finishConnect();
         key.channel().register(selector, SelectionKey.OP_READ, new ClientOutput(this, socketChannel));
         Thread clientOutput = new Thread(new ClientInput(this, key));
         clientOutput.start();
