@@ -12,10 +12,10 @@ import java.util.Scanner;
  *
  * @author philip
  */
-class clientOutput implements Runnable {
+class ClientInput implements Runnable {
     private final ClientSelector cliSelector;
     private final SelectionKey key;
-    public clientOutput(ClientSelector cliSelector, SelectionKey key) {
+    public ClientInput(ClientSelector cliSelector, SelectionKey key) {
         this.cliSelector = cliSelector;
         this.key = key;
     }

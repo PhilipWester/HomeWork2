@@ -48,7 +48,7 @@ public class ClientSelector {
                     
                 }
                 else if(key.isReadable()){
-                    clientInput cliInput = (clientInput) key.attachment();
+                    ClientOutput cliInput = (ClientOutput) key.attachment();
                     cliInput.notifyPrint();
                     // Read from channel and execute task on attached object
                 }
@@ -60,8 +60,8 @@ public class ClientSelector {
     }
 
     private void initOutThread(SelectionKey key) throws ClosedChannelException{
-        key.channel().register(selector, SelectionKey.OP_READ, new clientInput(this, socketChannel));
-        Thread clientOutput = new Thread(new clientOutput(this, key));
+        key.channel().register(selector, SelectionKey.OP_READ, new ClientOutput(this, socketChannel));
+        Thread clientOutput = new Thread(new ClientInput(this, key));
         clientOutput.start();
     }
     private void initConnection() throws IOException {

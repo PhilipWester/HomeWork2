@@ -14,13 +14,13 @@ import java.util.Arrays;
  *
  * @author philip
  */
-public class clientInput {
+public class ClientOutput {
     private final ClientSelector cliSelector;
     private String messageFromServer;
     private ByteBuffer buf = ByteBuffer.allocateDirect(8192);
     private SocketChannel socketChannel;
 
-    public clientInput(ClientSelector cliSelector, SocketChannel socketChannel){
+    public ClientOutput(ClientSelector cliSelector, SocketChannel socketChannel){
         this.cliSelector = cliSelector;
         this.socketChannel = socketChannel;
     }
