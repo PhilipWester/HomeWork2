@@ -92,7 +92,7 @@ class ClientHandler implements Runnable {
         // Puts the content of the buffer in a string
         byte [] msg = new byte[buf.remaining()];
         buf.get(msg);
-        request = Arrays.toString(msg).toLowerCase();
+        request = new String(msg);
         // Takes a thread out of the pool and lets it run clientHandler
         server.threadPool.execute(this);
         

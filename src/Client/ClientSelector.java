@@ -7,6 +7,7 @@ package Client;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
@@ -27,6 +28,7 @@ public class ClientSelector {
     private Selector selector;
     private final int NumberOfThreads = 4;
     private String messageToServer;
+    private ByteBuffer buf;
     public ExecutorService threadPool = Executors.newFixedThreadPool(NumberOfThreads);
     
     void clientSelector() throws IOException{
@@ -53,7 +55,10 @@ public class ClientSelector {
                     // Read from channel and execute task on attached object
                 }
                 else if(key.isWritable()){
-                    // Write (back) to channel 
+                    // Write to server
+                    send();
+                    key.interestOps(SelectionKey.OP_READ);
+                    
                 }
             }
         }
@@ -74,7 +79,11 @@ public class ClientSelector {
         this.messageToServer = msg;
         key.interestOps(SelectionKey.OP_WRITE);
         selector.wakeup();
-    }    
+    }
+    void send() throws IOException{
+        buf = ByteBuffer.wrap(messageToServer.getBytes());
+        socketChannel.write(buf);
+    }
 }   
 
 /*
