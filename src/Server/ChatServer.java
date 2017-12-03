@@ -15,6 +15,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -60,7 +62,12 @@ public class ChatServer {
                 else if(key.isReadable()){
                     // Read from channel and execute task on attached object
                     readChannel(key);
-                    // After every read we would like to write
+                    try {
+                        // After every read we would like to write, BUT this makes us read the first message twice
+                        Thread.sleep(100);
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                     key.interestOps(SelectionKey.OP_WRITE);
                 }
                 else if(key.isWritable()){
