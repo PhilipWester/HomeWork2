@@ -33,8 +33,6 @@ public class ChatServer {
     private Selector selector;
     private ServerSocketChannel serverChannel;
     public ExecutorService threadPool = Executors.newFixedThreadPool(NumberOfThreads);
-    //  Is this ok? The cliHandler will activate the OP_WRITE even though maybe that is the main threads task
-    //  If not: Make a list with the keys that need to write with clihandler and let main thread go through them and make them OP_WRITE itself
     void activateSend(SelectionKey key){
         //  VERKAR som om det inte är samma nyckel, denna nyckel ligger på interestOps 16 == accept, inte read eller write som den borde.
         selector.wakeup();
