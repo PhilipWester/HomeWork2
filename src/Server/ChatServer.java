@@ -11,6 +11,7 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -30,11 +31,10 @@ public class ChatServer {
     private Selector selector;
     private ServerSocketChannel serverChannel;
     public ExecutorService threadPool = Executors.newFixedThreadPool(NumberOfThreads);
-    
     //  Is this ok? The cliHandler will activate the OP_WRITE even though maybe that is the main threads task
     //  If not: Make a list with the keys that need to write with clihandler and let main thread go through them and make them OP_WRITE itself
     void activateSend(SelectionKey key){
-        key.interestOps(SelectionKey.OP_WRITE);
+        //  VERKAR som om det inte är samma nyckel, denna nyckel ligger på interestOps 16 == accept, inte read eller write som den borde.
         selector.wakeup();
     }
     
@@ -42,13 +42,11 @@ public class ChatServer {
     private void startServer() throws IOException{
         // Init selector    
         selector = Selector.open();
-                
         // Init listening socket
         serverChannel = ServerSocketChannel.open();
         serverChannel.configureBlocking(false);
         serverChannel.bind(new InetSocketAddress(PORT));
         serverChannel.register(selector, SelectionKey.OP_ACCEPT);
-        
         while(true){
             selector.select();
             Iterator<SelectionKey> iterator = selector.selectedKeys().iterator();
@@ -62,6 +60,8 @@ public class ChatServer {
                 else if(key.isReadable()){
                     // Read from channel and execute task on attached object
                     readChannel(key);
+                    // After every read we would like to write
+                    key.interestOps(SelectionKey.OP_WRITE);
                 }
                 else if(key.isWritable()){
                     // Write (back) to channel 
@@ -89,6 +89,7 @@ public class ChatServer {
     private void writeChannel(SelectionKey key) throws IOException{
         cliHandler = (ClientHandler) key.attachment();
         cliHandler.sendResponse();
+        key.interestOps(SelectionKey.OP_READ);
     }
     
     public static void main(String[] args) throws IOException {

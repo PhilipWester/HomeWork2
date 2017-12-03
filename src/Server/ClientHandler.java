@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
-import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -42,7 +41,8 @@ class ClientHandler implements Runnable {
     public void run() {
         try {                  
             if(!inGame){
-                requestResponse("To start a game, type: Start Game");
+                //requestResponse("To start a game, type: Start Game");
+                // TODO: Om inget av de nedanstående. Printa det ovanstående istället
                 switch (request){
                     case "start game":
                         controller.changeWord();
